@@ -15,8 +15,8 @@
 }
 
 
-figcaption {
-    @apply hidden;
+.attachment__caption {
+    display: none;
     }
 
 

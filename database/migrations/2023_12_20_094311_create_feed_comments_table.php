@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('feed_comments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('feed_id')->constrained()->onDelete('cascade');
-            $table->text('comment');
+            $table->text('comment')->nullable();
             $table->foreignId('created_by')->nullable();
             $table->foreignId('updated_by')->nullable();
-            $table->foreignId('parent_id')->nullable()->constrained('feed_comments')->onDelete('no action');
+            $table->foreignId('parent_id')->nullable()->constrained('feed_comments')->onDelete('cascade');
             $table->timestamps();
         });
     }

@@ -34,7 +34,8 @@ class Announcement extends Page
     public $allComment;
     public $nextComment;
     public $count;
-    public $emoji;
+    public $postCommentCount;
+
 
 
     public function detailForm(Form $form): Form
@@ -57,7 +58,7 @@ class Announcement extends Page
             'image' => $this->postImage['image'],
 
         ]);
-        $this->post = Feed::all();
+        $this->post = Feed::get();
 
         Notification::make()
             ->title('Saved successfully')
@@ -68,8 +69,10 @@ class Announcement extends Page
         $recipient = User::all();
         //   dd($recipient);
         Notification::make()
-            ->title('Announcement')
+            ->title('A new  feed is posted')
             ->sendToDatabase($recipient);
+
+        return  redirect()->to('/feeds');
     }
 
     public function childcomment($id)
@@ -77,7 +80,9 @@ class Announcement extends Page
 
         // dd($this->nextComment);
         $feed = FeedComments::find($id);
+
         // dd($feed);
+
         FeedComments::create([
             'feed_id' => $feed->feed_id,
             'comment' => $this->nextComment,
@@ -88,20 +93,60 @@ class Announcement extends Page
             'nextComment'
         ]);
     }
-    public function displayfeed($id)
+
+    public function insertNewLine()
     {
         // dd('ki');
-        // dd($this->postComments);
+        // Perform the action when Shift + Enter keys are pressed
+        // For example, insert a newline character
+        $this->postComments .= "\n";
+    }
+
+    public function displayfeed($id)
+    {
+        //  dd('ji');
+        $user = FeedComments::where('created_by', auth()->id())->where('feed_id', $id)->first();
+        // dd($user);
+        $this->postCommentCount = FeedComments::where('feed_id', $id)->count();
+
+
+        // $this->postComments = $this->postComments ?? '';
         FeedComments::create([
             'feed_id' => $id,
             'comment' => $this->postComments,
 
         ]);
 
+
+
         $this->reset([
             'postComments'
         ]);
         // dd('done');
+
+        return  redirect()->to('/feeds');
+    }
+
+    public function postDetele($id)
+    {
+        // dd($id);
+        $feeds = Feed::find($id);
+        //    dd($feeds);
+        $feeds->delete();
+        return  redirect()->to('/feeds');
+    }
+    public function deletedcomment($id)
+    {
+
+        $parentComment = FeedComments::with('subfeeds')->find($id);
+        // dd($childComment);
+        $parentComment->delete();
+    }
+    public function deletechildComment($id)
+    {
+        $childComment = FeedComments::find($id);
+        // dd('ji');
+        $childComment->delete();
     }
 
 
@@ -109,8 +154,6 @@ class Announcement extends Page
     public function FeedLikes($id)
 
     {
-
-
         // dd('done');
         $user = FeedLike::where('user_id', auth()->id())->where('feeds_id', $id)->first();
         $this->count = FeedLike::where('feeds_id', $id)->count();
@@ -130,13 +173,7 @@ class Announcement extends Page
         $this->post = Feed::with('createdBy.employee', 'createdBy.jobInfo.designation', 'feedComment.subfeeds', 'feedLike')->get();
     }
 
-    public function addSpace()
 
-    {
-        // dd('ki');
-        // Handle adding space logic here
-        $this->postComments .= ' ';
-    }
 
     public function sublikes($id)
     {
@@ -174,7 +211,7 @@ class Announcement extends Page
 
 
         //    dd($this->b->name);
-        $this->post = Feed::with('createdBy.employee', 'createdBy.jobInfo.designation', 'feedComment.subfeeds', 'feedLike')->orderBy('created_at', 'DESC')->get();
+        $this->post = Feed::with('createdBy.employee', 'createdBy.jobInfo.designation', 'feedComment.subfeeds', 'feedLike')->get();
         // dd(  $this->post[0]);
 
 
